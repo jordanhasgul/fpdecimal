@@ -7,7 +7,7 @@ const (
 
 func Encode32(bcd uint32) uint32 {
 	if bcd > MaxEncodableUint32 {
-		panic("")
+		panic("bcd is greater that dpd.MaxEncodableUint32")
 	}
 
 	var dpd uint32
@@ -24,7 +24,7 @@ func Encode32(bcd uint32) uint32 {
 
 func Decode32(dpd uint32) uint32 {
 	if dpd > MaxDecodableUint32 {
-		panic("")
+		panic("dpd is greater that dpd.MaxDecodableUint32")
 	}
 
 	var bcd uint32
@@ -46,7 +46,7 @@ const (
 
 func Encode64(bcd uint64) uint64 {
 	if bcd > MaxEncodableUint64 {
-		panic("")
+		panic("bcd is greater that dpd.MaxEncodableUint64")
 	}
 
 	var dpd uint64
@@ -63,7 +63,7 @@ func Encode64(bcd uint64) uint64 {
 
 func Decode64(dpd uint64) uint64 {
 	if dpd > MaxDecodableUint64 {
-		panic("")
+		panic("dpd is greater that dpd.MaxDecodableUint64")
 	}
 
 	var bcd uint64
