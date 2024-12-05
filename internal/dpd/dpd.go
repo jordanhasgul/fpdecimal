@@ -39,46 +39,7 @@ func Decode32(dpd uint32) uint32 {
 	return bcd
 }
 
-const (
-	MaxEncodableUint64 uint64 = 0b1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001
-	MaxDecodableUint64 uint64 = 0b0001011111_1111111101_1111111101_1111111101_1111111101_1111111101
-)
-
-func Encode64(bcd uint64) uint64 {
-	if bcd > MaxEncodableUint64 {
-		panic("bcd is greater that dpd.MaxEncodableUint64")
-	}
-
-	var dpd uint64
-	for i := 0; i < 6; i++ {
-		first3Digits := bcd & 0b1111_1111_1111
-		bcd >>= 12
-
-		first3DigitsInDPD := toDPD(first3Digits)
-		dpd |= first3DigitsInDPD << (10 * i)
-	}
-
-	return dpd
-}
-
-func Decode64(dpd uint64) uint64 {
-	if dpd > MaxDecodableUint64 {
-		panic("dpd is greater that dpd.MaxDecodableUint64")
-	}
-
-	var bcd uint64
-	for i := 0; i < 6; i++ {
-		first3DigitsInDPD := dpd & 0b1111111111
-		dpd >>= 10
-
-		first3Digits := fromDPD(first3DigitsInDPD)
-		bcd |= first3Digits << (12 * i)
-	}
-
-	return bcd
-}
-
-func toDPD[N uint32 | uint64](bcd N) N {
+func toDPD(bcd uint32) uint32 {
 	if bcd > 0b1001_1001_1001 {
 		panic("bcd is greater than 0b1001_1001_1001")
 	}
@@ -122,7 +83,7 @@ func toDPD[N uint32 | uint64](bcd N) N {
 	return dpd
 }
 
-func fromDPD[N uint32 | uint64](dpd N) N {
+func fromDPD(dpd uint32) uint32 {
 	if dpd > 0b1111111101 {
 		panic("dpd is greater than 0b1111111101")
 	}

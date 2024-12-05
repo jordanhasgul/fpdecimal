@@ -35,60 +35,19 @@ func Decode32(bcd uint32) uint32 {
 		d := bcd & 0b1111
 		bcd >>= 4
 
-		n += d * pow10[uint32](i)
+		n += d * pow10(i)
 	}
 
 	return n
 }
 
-const (
-	MaxEncodableUint64 uint64 = 99999999_99999999
-	MaxDecodableUint64 uint64 = 0b1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001_1001
-
-	sizeOfBCDAsUint64 uint64 = 4
-	sizeOfUint64      uint64 = 32
-	numBCDsInUint64          = sizeOfUint64 / sizeOfBCDAsUint64
-)
-
-func Encode64(n uint64) uint64 {
-	if n > MaxEncodableUint64 {
-		panic("n is greater than bcd.MaxEncodableUint64")
-	}
-
-	var bcd uint64
-	for i := uint64(0); i < numBCDsInUint64; i++ {
-		d := n % 10
-		n /= 10
-
-		bcd |= d << (4 * i)
-	}
-
-	return bcd
-}
-
-func Decode64(bcd uint64) uint64 {
-	if bcd > MaxDecodableUint64 {
-		panic("n is greater than bcd.MaxDecodableUint64")
-	}
-
-	var n uint64
-	for i := uint64(0); i < numBCDsInUint64; i++ {
-		d := bcd & 0b1111
-		bcd >>= 4
-
-		n += d * pow10[uint64](i)
-	}
-
-	return n
-}
-
-func pow10[N uint32 | uint64](n N) N {
+func pow10(n uint32) uint32 {
 	if n == 0 {
 		return 1
 	}
 
-	result := N(1)
-	for i := N(0); i < n; i++ {
+	result := uint32(1)
+	for i := uint32(0); i < n; i++ {
 		result *= 10
 	}
 
