@@ -46,7 +46,7 @@ func TestEncode32(t *testing.T) {
 		name := fmt.Sprintf("encode %d to bcd", testCase.input)
 		t.Run(name, func(t *testing.T) {
 			got := bcd.Encode32(testCase.input)
-			require.Equal(t, got, testCase.want)
+			require.Equal(t, testCase.want, got)
 		})
 	}
 }
@@ -89,7 +89,7 @@ func TestDecode32(t *testing.T) {
 		name := fmt.Sprintf("decode %d from bcd", testCase.input)
 		t.Run(name, func(t *testing.T) {
 			got := bcd.Decode32(testCase.input)
-			require.Equal(t, got, testCase.want)
+			require.Equal(t, testCase.want, got)
 		})
 	}
 }

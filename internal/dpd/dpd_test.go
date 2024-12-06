@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test(t *testing.T) {
+	fmt.Printf("%020b\n", dpd.Encode32(0b0000_0000_0000_0000_0111_0101))
+}
+
 func TestEncode32(t *testing.T) {
 	t.Run("no panic on n <= 0b1001_1001_1001_1001_1001_1001_1001_1001", func(t *testing.T) {
 		require.NotPanics(t, func() {
@@ -46,7 +50,7 @@ func TestEncode32(t *testing.T) {
 		name := fmt.Sprintf("encode bcd(%d) to dpd", testCase.input)
 		t.Run(name, func(t *testing.T) {
 			got := dpd.Encode32(testCase.input)
-			require.Equal(t, got, testCase.want)
+			require.Equal(t, testCase.want, got)
 		})
 	}
 }
@@ -89,7 +93,7 @@ func TestDecode32(t *testing.T) {
 		name := fmt.Sprintf("decode bcd(%d) from dpd", testCase.input)
 		t.Run(name, func(t *testing.T) {
 			got := dpd.Decode32(testCase.input)
-			require.Equal(t, got, testCase.want)
+			require.Equal(t, testCase.want, got)
 		})
 	}
 }
