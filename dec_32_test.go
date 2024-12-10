@@ -19,19 +19,19 @@ func TestNewDec32(t *testing.T) {
 			name: "encode NaN as 32-bit decimal",
 
 			f:    float32(math.NaN()),
-			want: 0b0_11110_000000_00000000000000000000,
+			want: 0b0_11111_000000_00000000000000000000,
 		},
 		{
 			name: "encode +Inf as 32-bit decimal",
 
 			f:    float32(math.Inf(1)),
-			want: 0b0_11111_000000_00000000000000000000,
+			want: 0b0_11110_000000_00000000000000000000,
 		},
 		{
 			name: "encode -Inf as 32-bit decimal",
 
 			f:    float32(math.Inf(-1)),
-			want: 0b1_11111_000000_00000000000000000000,
+			want: 0b1_11110_000000_00000000000000000000,
 		},
 	}
 	for _, testCase := range testCases {
