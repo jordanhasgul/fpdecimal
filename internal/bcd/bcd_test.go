@@ -1,7 +1,6 @@
 package bcd_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/jordanhasgul/fpdecimal/internal/bcd"
@@ -22,30 +21,39 @@ func TestEncode32(t *testing.T) {
 	})
 
 	testCases := []struct {
-		input uint32
-		want  uint32
+		name string
+
+		n    uint32
+		want uint32
 	}{
 		{
-			input: 0,
-			want:  0b0000,
+			name: "encode 0 to bcd",
+
+			n:    0,
+			want: 0b0000,
 		},
 		{
-			input: 5,
-			want:  0b0101,
+			name: "encode 5 to bcd",
+
+			n:    5,
+			want: 0b0101,
 		},
 		{
-			input: 11,
-			want:  0b0001_0001,
+			name: "encode 11 to bcd",
+
+			n:    11,
+			want: 0b0001_0001,
 		},
 		{
-			input: 999,
-			want:  0b1001_1001_1001,
+			name: "encode 999 to bcd",
+
+			n:    999,
+			want: 0b1001_1001_1001,
 		},
 	}
 	for _, testCase := range testCases {
-		name := fmt.Sprintf("encode %d to bcd", testCase.input)
-		t.Run(name, func(t *testing.T) {
-			got := bcd.Encode32(testCase.input)
+		t.Run(testCase.name, func(t *testing.T) {
+			got := bcd.Encode32(testCase.n)
 			require.Equal(t, testCase.want, got)
 		})
 	}
@@ -65,30 +73,39 @@ func TestDecode32(t *testing.T) {
 	})
 
 	testCases := []struct {
-		input uint32
-		want  uint32
+		name string
+
+		bcd  uint32
+		want uint32
 	}{
 		{
-			input: 0b0000,
-			want:  0,
+			name: "decode 0 from bcd",
+
+			bcd:  0b0000,
+			want: 0,
 		},
 		{
-			input: 0b0101,
-			want:  5,
+			name: "decode 5 from bcd",
+
+			bcd:  0b0101,
+			want: 5,
 		},
 		{
-			input: 0b0001_0001,
-			want:  11,
+			name: "decode 11 from bcd",
+
+			bcd:  0b0001_0001,
+			want: 11,
 		},
 		{
-			input: 0b1001_1001_1001,
-			want:  999,
+			name: "decode 999 from bcd",
+
+			bcd:  0b1001_1001_1001,
+			want: 999,
 		},
 	}
 	for _, testCase := range testCases {
-		name := fmt.Sprintf("decode %d from bcd", testCase.input)
-		t.Run(name, func(t *testing.T) {
-			got := bcd.Decode32(testCase.input)
+		t.Run(testCase.name, func(t *testing.T) {
+			got := bcd.Decode32(testCase.bcd)
 			require.Equal(t, testCase.want, got)
 		})
 	}
