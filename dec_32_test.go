@@ -1,7 +1,6 @@
 package fpdecimal_test
 
 import (
-	"fmt"
 	"math"
 	"testing"
 
@@ -9,37 +8,36 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFromFloat32(t *testing.T) {
+func TestNewDec32(t *testing.T) {
 	testCases := []struct {
-		input float32
-		want  uint32
+		name string
+
+		f    float32
+		want uint32
 	}{
 		{
-			input: float32(math.NaN()),
-			want:  0b0_11111_000000_00000000000000000000,
+			name: "encode NaN as 32-bit decimal",
+
+			f:    float32(math.NaN()),
+			want: 0b0_11110_000000_00000000000000000000,
 		},
 		{
-			input: float32(math.Inf(1)),
-			want:  0b0_11110_000000_00000000000000000000,
+			name: "encode +Inf as 32-bit decimal",
+
+			f:    float32(math.Inf(1)),
+			want: 0b0_11111_000000_00000000000000000000,
 		},
 		{
-			input: -7.5,
-			want:  0b1_01000_100100_0000_0000_0000_0111_0101,
+			name: "encode -Inf as 32-bit decimal",
+
+			f:    float32(math.Inf(-1)),
+			want: 0b1_11111_000000_00000000000000000000,
 		},
 	}
 	for _, testCase := range testCases {
-		name := fmt.Sprintf("encode %f to 32-bit decimal", testCase.input)
-		t.Run(name, func(t *testing.T) {
-			got := fpdecimal.FromFloat32(testCase.input)
-			require.Equal(t, got, testCase.want)
+		t.Run(testCase.name, func(t *testing.T) {
+			got := fpdecimal.NewDec32(testCase.f)
+			require.Equal(t, testCase.want, got.Bits())
 		})
 	}
-}
-
-func TestDec32_GoString(t *testing.T) {
-
-}
-
-func TestDec32_String(t *testing.T) {
-
 }
