@@ -33,11 +33,27 @@ func TestNewDec32(t *testing.T) {
 			f:    float32(math.Inf(-1)),
 			want: 0b1_11110_000000_00000000000000000000,
 		},
+		{
+			name: "encode -1 * math.MaxFloat32 as 32-bit decimal",
+
+			f:    -1 * float32(math.MaxFloat32),
+			want: 0b1_10011_000101_10000000100100101101,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			got := fpdecimal.NewDec32(testCase.f)
 			require.Equal(t, testCase.want, got.Bits())
 		})
+	}
+}
+
+func BenchmarkNewDec32(b *testing.B) {
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	f := float32(math.MaxFloat32)
+	for range b.N {
+		_ = fpdecimal.NewDec32(f)
 	}
 }
