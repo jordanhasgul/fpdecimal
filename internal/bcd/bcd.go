@@ -1,55 +1,78 @@
 package bcd
 
-const (
-	MaxEncodableUint32 uint32 = 99999999
-	MaxDecodableUint32 uint32 = 0b1001_1001_1001_1001_1001_1001_1001_1001
+import (
+	"fmt"
+)
 
-	sizeOfBCDAsUint32 uint32 = 4
-	sizeOfUint32      uint32 = 32
-	numBCDsInUint32          = sizeOfUint32 / sizeOfBCDAsUint32
+const (
+	maxEncodableUint32 uint32 = 99999999
+	maxDecodableUint32 uint32 = 0b1001_1001_1001_1001_1001_1001_1001_1001
 )
 
 func Encode32(n uint32) uint32 {
-	if n > MaxEncodableUint32 {
-		panic("n is greater than bcd.MaxEncodableUint32")
+	if n > maxEncodableUint32 {
+		panicString := fmt.Sprintf("n is greater than %d", maxEncodableUint32)
+		panic(panicString)
 	}
 
-	var bcd uint32
-	for i := uint32(0); i < numBCDsInUint32; i++ {
-		d := n % 10
-		n /= 10
+	digit8 := n % 10
+	n /= 10
 
-		bcd |= d << (4 * i)
-	}
+	digit7 := n % 10
+	n /= 10
 
-	return bcd
+	digit6 := n % 10
+	n /= 10
+
+	digit5 := n % 10
+	n /= 10
+
+	digit4 := n % 10
+	n /= 10
+
+	digit3 := n % 10
+	n /= 10
+
+	digit2 := n % 10
+	n /= 10
+
+	digit1 := n % 10
+	n /= 10
+
+	return (digit1 << 28) | (digit2 << 24) | (digit3 << 20) | (digit4 << 16) |
+		(digit5 << 12) | (digit6 << 8) | (digit7 << 4) | (digit8 << 0)
 }
 
 func Decode32(bcd uint32) uint32 {
-	if bcd > MaxDecodableUint32 {
-		panic("bcd is greater than bcd.MaxDecodableUint32")
+	if bcd > maxDecodableUint32 {
+		panicString := fmt.Sprintf("bcd is greater than %b", maxDecodableUint32)
+		panic(panicString)
 	}
 
-	var n uint32
-	for i := uint32(0); i < numBCDsInUint32; i++ {
-		d := bcd & 0b1111
-		bcd >>= 4
+	digit8 := bcd & 0b1111
+	bcd >>= 4
 
-		n += d * pow10(i)
-	}
+	digit7 := bcd & 0b1111
+	bcd >>= 4
 
-	return n
-}
+	digit6 := bcd & 0b1111
+	bcd >>= 4
 
-func pow10(n uint32) uint32 {
-	if n == 0 {
-		return 1
-	}
+	digit5 := bcd & 0b1111
+	bcd >>= 4
 
-	result := uint32(1)
-	for i := uint32(0); i < n; i++ {
-		result *= 10
-	}
+	digit4 := bcd & 0b1111
+	bcd >>= 4
 
-	return result
+	digit3 := bcd & 0b1111
+	bcd >>= 4
+
+	digit2 := bcd & 0b1111
+	bcd >>= 4
+
+	digit1 := bcd & 0b1111
+	bcd >>= 4
+
+	return (digit1 * 10000000) + (digit2 * 1000000) + (digit3 * 100000) + (digit4 * 10000) +
+		(digit5 * 1000) + (digit6 * 100) + (digit7 * 10) + (digit8 * 1)
 }

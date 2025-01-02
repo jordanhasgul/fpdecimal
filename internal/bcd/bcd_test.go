@@ -110,3 +110,21 @@ func TestDecode32(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkEncode32(b *testing.B) {
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for range b.N {
+		_ = bcd.Encode32(99999999)
+	}
+}
+
+func BenchmarkDecode32(b *testing.B) {
+	b.ResetTimer()
+	b.ReportAllocs()
+	
+	for range b.N {
+		_ = bcd.Decode32(0b1001_1001_1001_1001_1001_1001_1001_1001)
+	}
+}
