@@ -3,19 +3,7 @@ package fpdecimal
 import (
 	"math"
 
-	"github.com/jordanhasgul/fpdecimal/internal/bcd"
-	"github.com/jordanhasgul/fpdecimal/internal/dpd"
-)
-
-const (
-	signBitPosition                    = uint32(31)
-	combinationFieldBitPosition        = uint32(26)
-	combinationFieldMask               = uint32(0b11111)
-	exponentBias                       = int32(101)
-	exponentContinuationBitPosition    = uint32(20)
-	exponentContinuationMask           = uint32(0b111111)
-	coefficientContinuationBitPosition = uint32(0)
-	coefficientContinuationMask        = uint32(0b11111111111111111111)
+	"github.com/jordanhasgul/fpdecimal/internal/des"
 )
 
 type Dec32 struct {
@@ -23,88 +11,117 @@ type Dec32 struct {
 }
 
 func NewDec32(f float32) Dec32 {
+	f64 := float64(f)
+	if math.IsNaN(f64) {
+		return Dec32{
+			bits: des.NaN32,
+		}
+	}
+
+	if math.IsInf(f64, 1) {
+		return Dec32{
+			bits: des.PosInf32,
+		}
+	}
+
+	if math.IsInf(f64, -1) {
+		return Dec32{
+			bits: des.NegInf32,
+		}
+	}
+
+	if f64 == 0 {
+		return Dec32{
+			bits: des.Zero32,
+		}
+	}
+
 	sign := uint32(0)
-	if f < 0 {
-		f *= -1
+	if f64 < 0 {
+		f64 *= -1
 		sign = 1
 	}
 
-	if math.IsNaN(float64(f)) {
-		return Dec32{
-			bits: (sign << signBitPosition) |
-				(0b11111 << combinationFieldBitPosition),
-		}
-	}
-
-	if math.IsInf(float64(f), 0) {
-		return Dec32{
-			bits: (sign << signBitPosition) |
-				(0b11110 << combinationFieldBitPosition),
-		}
-	}
-
 	var (
-		coefficient, exponent = extractCoefficientAndExponent(f)
-
-		adjustedExponent          = uint32(exponent + exponentBias)
-		twoMSBsOfAdjustedExponent = adjustedExponent >> 6
-
-		firstDigitOfCoefficient = (coefficient / 1e6) % 10
-		remainingDigits         = coefficient - (firstDigitOfCoefficient * 1e6)
-
-		combinationField        = constructCombinationField(firstDigitOfCoefficient, twoMSBsOfAdjustedExponent)
-		exponentContinuation    = constructExponentContinuation(adjustedExponent)
-		coefficientContinuation = constructCoefficientContinuation(remainingDigits)
+		coefficient = uint32(f64)
+		exponent    = int32(0)
 	)
-	return Dec32{
-		bits: (sign << signBitPosition) |
-			(combinationField << combinationFieldBitPosition) |
-			(exponentContinuation << exponentContinuationBitPosition) |
-			(coefficientContinuation << coefficientContinuationBitPosition),
-	}
-}
-
-func extractCoefficientAndExponent(f float32) (uint32, int32) {
-	exponent := int32(0)
 	switch {
-	case f < 1000000:
-		for f < 1000000 {
-			f *= 10
-			exponent--
-		}
-	case f >= 10000000:
-		for f >= 10000000 {
-			f /= 10
-			exponent++
-		}
+	case f64 >= 10000000:
+		shift := math.Ceil(math.Log10(f64) - 7)
+		f64 /= math.Pow10(int(shift))
+
+		coefficient = uint32(f64)
+		exponent = int32(shift)
+	case f64 < 1000000:
+		shift := math.Ceil(6 - math.Log10(f64))
+		f64 *= math.Pow10(int(shift))
+
+		coefficient = uint32(f64)
+		exponent = int32(shift)
 	}
 
-	coefficient := uint32(f)
-	return coefficient, exponent
+	return Dec32{
+		bits: des.Encode32(sign, coefficient, exponent),
+	}
 }
 
-func constructCombinationField(firstDigitOfCoefficient, twoMSBsOfAdjustedExponent uint32) uint32 {
-	var combinationField uint32
-	if firstDigitOfCoefficient >= 8 {
-		combinationField = 0b11000 |
-			(twoMSBsOfAdjustedExponent << 1) |
-			(firstDigitOfCoefficient & 0b0001)
-	} else {
-		combinationField = 0b00000 |
-			(twoMSBsOfAdjustedExponent << 3) |
-			(firstDigitOfCoefficient & 0b0111)
+func (d *Dec32) IsNaN() bool {
+	if d.bits == 0 {
+		d.bits = des.Zero32
 	}
 
-	return combinationField & combinationFieldMask
+	return d.bits == des.NaN32
 }
 
-func constructCoefficientContinuation(remainingDigits uint32) uint32 {
-	remainingDigits = bcd.Encode32(remainingDigits)
-	return dpd.Encode32(remainingDigits) & coefficientContinuationMask
+func (d *Dec32) IsInf() bool {
+	if d.bits == 0 {
+		d.bits = des.Zero32
+	}
+
+	return d.IsPosInf() || d.IsNegInf()
 }
 
-func constructExponentContinuation(adjustedExponent uint32) uint32 {
-	return adjustedExponent & exponentContinuationMask
+func (d *Dec32) IsPosInf() bool {
+	if d.bits == 0 {
+		d.bits = des.Zero32
+	}
+
+	return d.bits == des.PosInf32
+}
+
+func (d *Dec32) IsNegInf() bool {
+	if d.bits == 0 {
+		d.bits = des.Zero32
+	}
+
+	return d.bits == des.NegInf32
+}
+
+func (d *Dec32) IsZero() bool {
+	if d.bits == 0 {
+		d.bits = des.Zero32
+	}
+
+	return d.bits == des.Zero32
+}
+
+func (d *Dec32) IsPos() bool {
+	if d.bits == 0 {
+		d.bits = des.Zero32
+	}
+
+	sign, _, _ := des.Decode32(d.bits)
+	return sign == 0
+}
+
+func (d *Dec32) IsNeg() bool {
+	if d.bits == 0 {
+		d.bits = des.Zero32
+	}
+
+	sign, _, _ := des.Decode32(d.bits)
+	return sign == 1
 }
 
 func (d *Dec32) Bits() uint32 {
