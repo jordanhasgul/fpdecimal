@@ -1,42 +1,37 @@
 package dpd
 
+import "fmt"
+
 const (
-	MaxEncodableUint32 uint32 = 0b1001_1001_1001_1001_1001_1001_1001_1001
-	MaxDecodableUint32 uint32 = 0b0001011111_1111111101_1111111101
+	maxEncodableUint32 uint32 = 0b1001_1001_1001_1001_1001_1001_1001_1001
+	maxDecodableUint32 uint32 = 0b0001011111_1111111101_1111111101
 )
 
 func Encode32(bcd uint32) uint32 {
-	if bcd > MaxEncodableUint32 {
-		panic("bcd is greater that dpd.MaxEncodableUint32")
+	if bcd > maxEncodableUint32 {
+		panicString := fmt.Sprintf("bcd is greater than %b", maxEncodableUint32)
+		panic(panicString)
 	}
 
-	var dpd uint32
-	for i := 0; i < 3; i++ {
-		first3Digits := bcd & 0b1111_1111_1111
-		bcd >>= 12
+	var (
+		last3Digits      = bcd & 0b1111_1111_1111
+		last3DigitsInDPD = toDPD(last3Digits)
+	)
+	bcd >>= 12
 
-		first3DigitsInDPD := toDPD(first3Digits)
-		dpd |= first3DigitsInDPD << (10 * i)
-	}
+	var (
+		next3Digits      = bcd & 0b1111_1111_1111
+		next3DigitsInDPD = toDPD(next3Digits)
+	)
+	bcd >>= 12
 
-	return dpd
-}
+	var (
+		first3Digits      = bcd & 0b1111_1111_1111
+		first3DigitsInDPD = toDPD(first3Digits)
+	)
+	bcd >>= 12
 
-func Decode32(dpd uint32) uint32 {
-	if dpd > MaxDecodableUint32 {
-		panic("dpd is greater that dpd.MaxDecodableUint32")
-	}
-
-	var bcd uint32
-	for i := 0; i < 3; i++ {
-		first3DigitsInDPD := dpd & 0b1111111111
-		dpd >>= 10
-
-		first3Digits := fromDPD(first3DigitsInDPD)
-		bcd |= first3Digits << (12 * i)
-	}
-
-	return bcd
+	return (first3DigitsInDPD << 20) | (next3DigitsInDPD << 10) | (last3DigitsInDPD << 0)
 }
 
 func toDPD(bcd uint32) uint32 {
@@ -69,18 +64,35 @@ func toDPD(bcd uint32) uint32 {
 		y = e | (a & i) | (^a & k)
 		z = l
 	)
+	return (q << 9) | (r << 8) | (s << 7) | (t << 6) | (u << 5) |
+		(v << 4) | (w << 3) | (x << 2) | (y << 1) | (z << 0)
+}
 
-	dpd := z << 0
-	dpd |= y << 1
-	dpd |= x << 2
-	dpd |= w << 3
-	dpd |= v << 4
-	dpd |= u << 5
-	dpd |= t << 6
-	dpd |= s << 7
-	dpd |= r << 8
-	dpd |= q << 9
-	return dpd
+func Decode32(dpd uint32) uint32 {
+	if dpd > maxDecodableUint32 {
+		panicString := fmt.Sprintf("dpd is greater than %030b", maxDecodableUint32)
+		panic(panicString)
+	}
+
+	var (
+		last3DigitsInDPD = dpd & 0b1111111111
+		last3Digits      = fromDPD(last3DigitsInDPD)
+	)
+	dpd >>= 10
+
+	var (
+		next3DigitsInDPD = dpd & 0b1111111111
+		next3Digits      = fromDPD(next3DigitsInDPD)
+	)
+	dpd >>= 10
+
+	var (
+		first3DigitsInDPD = dpd & 0b1111111111
+		first3Digits      = fromDPD(first3DigitsInDPD)
+	)
+	dpd >>= 10
+
+	return (first3Digits << 24) | (next3Digits << 12) | (last3Digits << 0)
 }
 
 func fromDPD(dpd uint32) uint32 {
@@ -113,18 +125,6 @@ func fromDPD(dpd uint32) uint32 {
 		k = (^w & y) | (u & ^x & y) | (r & w & x & (^y | (^t & ^u)))
 		l = z
 	)
-
-	bcd := l << 0
-	bcd |= k << 1
-	bcd |= j << 2
-	bcd |= i << 3
-	bcd |= h << 4
-	bcd |= g << 5
-	bcd |= f << 6
-	bcd |= e << 7
-	bcd |= d << 8
-	bcd |= c << 9
-	bcd |= b << 10
-	bcd |= a << 11
-	return bcd
+	return (a << 11) | (b << 10) | (c << 9) | (d << 8) | (e << 7) | (f << 6) |
+		(g << 5) | (h << 4) | (i << 3) | (j << 2) | (k << 1) | (l << 0)
 }
